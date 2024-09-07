@@ -1,8 +1,9 @@
 const app = require('./app');
-const config = require('../config/index');
+const config = require('../config');
+const logger = require('./utils/logger');
 
 const PORT = config.port;
 
 app.listen(PORT, () => {
-    console.info(`Server running in ${config.nodeEnv} mode on port ${PORT}`);
+    logger.info(`Server running in ${config.nodeEnv} mode on port ${PORT}`);
 });

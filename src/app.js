@@ -6,7 +6,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const logger = require('./utils/logger');
-
+const youTubeRoutes = require('./routes/youtubeRoutes');
 
 const app = express();
 
@@ -24,10 +24,9 @@ app.use(morgan('combined', { stream: logger.stream }));
 app.get('/api/v1/health', (req, res) => {
     res.status(200).json({
         status: 'OK',
-        message: 'Mic check. All systems narmal'
+        message: 'Mic check. All systems normal'
     });
 });
-
 
 // Metrics endpoint
 app.get('/api/v1/metrics', (req, res) => {
@@ -35,10 +34,11 @@ app.get('/api/v1/metrics', (req, res) => {
     promClient.register.metrics().then(data => res.send(data));
 });
 
-//   Routes
+// Routes
+app.use('/api/v1/youtube', youTubeRoutes);
 
 // Error handling
 app.use(notFound);
-app.use(errorHandler)
+app.use(errorHandler);
 
 module.exports = app;
