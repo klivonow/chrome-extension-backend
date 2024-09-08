@@ -7,6 +7,7 @@ const morgan = require('morgan');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const logger = require('./utils/logger');
 const youTubeRoutes = require('./routes/youtubeRoutes');
+const instagramRoutes = require('./routes/instagramRoutes');
 
 const app = express();
 
@@ -17,7 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({
     extended: true
 }));
-app.use(metricsMiddleware);
+// app.use(metricsMiddleware);
 app.use(morgan('combined', { stream: logger.stream }));
 
 // health check endpoint
@@ -36,6 +37,7 @@ app.get('/api/v1/metrics', (req, res) => {
 
 // Routes
 app.use('/api/v1/youtube', youTubeRoutes);
+app.use('/api/v1/instagram', instagramRoutes);
 
 // Error handling
 app.use(notFound);
