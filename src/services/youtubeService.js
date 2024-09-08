@@ -17,20 +17,26 @@ class YouTubeService {
     async getChannelDetails(ytUrl) {
         try {
             const channelId = await this.getChannelIdFromUrl(ytUrl);
-            const response = await this.rapidApiClient.get('/channel/home', {
-                params: { id: channelId }
+            const response = await this.rapidApiClient.get('/channel/videos', {
+                params: { id: channelId, sort_by: 'newest' }
             });
 
             if (!response.data || !response.data.meta) {
                 throw new Error('Channel not found or invalid response');
             }
+            const filteredVideoList = response.data.data?.map((video) => ({
+                videoId: video.videoId,
+                title: video.title,
+                viewCount: video.viewCount,
+            })) || []
 
             return {
                 title: response.data.meta.title,
                 channelHandle: response.data.meta.channelHandle,
                 subscriberCount: response.data.meta.subscriberCount,
                 videosCount: response.data.meta.videosCount,
-                videoList: response.data.data[0].data
+                videoList: filteredVideoList,
+                latestVideoCount: filteredVideoList.length || 0
             };
         } catch (error) {
             logger.error(`Error in YouTubeService.getChannelDetails: ${error.message}`);
@@ -54,6 +60,8 @@ class YouTubeService {
             throw error;
         }
     }
+
+
 }
 
 const youTubeService = new YouTubeService();

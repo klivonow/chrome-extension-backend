@@ -24,8 +24,8 @@ app.use(morgan('combined', { stream: logger.stream }));
 app.get('/api/v1/health', (req, res) => {
     res.status(200).json({
         status: 'OK',
-        message: 'Mic check. All systems normal'
-    });
+        message: 'Mic check. All systems narmal'
+    })
 });
 
 // Metrics endpoint

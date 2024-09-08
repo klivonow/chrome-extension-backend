@@ -13,7 +13,6 @@ class YouTubeController {
 
             logInteraction('youtube_channel_details');
             const channelDetails = await youTubeService.getChannelDetails(url);
-
             logger.info(`Channel details fetched for URL: ${url}`);
             res.json(channelDetails);
         } catch (error) {
