@@ -17,29 +17,28 @@ class InstagramService {
 
     async getUserDetails(username) {
         try {
-            const response = await this.instagramApiClientV1.get(
-                '/info', {
-                params: {
-                    username_or_id_or_url: username,
-                    include_about: true
-
-                }
-            }
-            );
-
+            const response = await this.instagramApiClientV1.get('/v1/info', { params: { username_or_id_or_url: username } });
+            console.log(response.data)
             if (!response.data) {
                 throw new Error('Instagram id not found')
             }
             return {
-                username: response.data.username,
-                full_name: response.data.full_name,
-                biography: response.data.biography,
-                follower_count: response.data.follower_count,
-                following_count: response.data.following_count,
-                media_count: response.data.media_count,
-                is_verified: response.data.is_verified,
-                is_business: response.data.is_business,
-                is_open_to_colab: response.data.is_open_to_colab,
+                username: response.data.data.username,
+                fullname: response.data.data.full_name,
+                biography: response.data.data.biography,
+                profilePicUrl: response.data.data.profile_pic_url,
+                followerCount: response.data.data.follower_count,
+                followingCount: response.data.data.following_count,
+                mediaCount: response.data.data.media_count,
+                contactNumber: response.data.data.contact_phone_number,
+                isVerified: response.data.data.is_verified,
+                isBusiness: response.data.data.is_business,
+                isOpenToColab: response.data.data.is_open_to_colab,
+                isFavourite: response.data.data.is_favorite,
+                isFavouriteForClips: response.data.data.is_favorite_for_clips,
+                isFavouriteForStories: response.data.data.is_favorite_for_stories,
+                locationData: response.data.data.location_data,
+
             }
 
         } catch (error) {
@@ -48,6 +47,13 @@ class InstagramService {
         }
     }
     // User posts and reels
+    async getUserPostandReelsDetails(username) {
+        try {
+            const response = await this.instagramApiClientV1.get('')
+        } catch (error) {
+
+        }
+    }
 }
 
 const instagramService = new InstagramService();
