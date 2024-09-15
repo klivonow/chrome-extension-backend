@@ -252,7 +252,7 @@ class InstagramService {
     calculatePostFrequency(posts) {
         const sortedDates = posts.map(post => post.timestamp).sort((a, b) => b - a);
         const totalDays = (sortedDates[0] - sortedDates[sortedDates.length - 1]) / (24 * 60 * 60);
-        return posts.length / (totalDays || 1); // Posts per day
+        return (posts.length / (totalDays || 1)) * 7; // Posts per day
     }
 
     getAccountType(typeCode) {
