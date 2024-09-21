@@ -1,0 +1,11 @@
+config:
+  target: "http://192.168.43.116:8080"
+  phases:
+    - duration: 20
+      arrivalRate: 10
+
+scenarios:
+  - name: "Search Beerbiceps insta channel details"
+    flow:
+      - get:
+          url: "/api/v1/instagram/account?username=beerbiceps"
