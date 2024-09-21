@@ -1,4 +1,4 @@
-const { metricsMiddleware } = require("./monitoring/setup");
+
 const promClient = require("prom-client");
 const express = require('express');
 const cors = require('cors');
@@ -8,6 +8,7 @@ const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const logger = require('./utils/logger');
 const youTubeRoutes = require('./routes/youtubeRoutes');
 const instagramRoutes = require('./routes/instagramRoutes');
+const twitterRoutes = require('./routes/twitterRoutes');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.get('/api/v1/metrics', (req, res) => {
 // Routes
 app.use('/api/v1/youtube', youTubeRoutes);
 app.use('/api/v1/instagram', instagramRoutes);
+app.use('/api/v1/twitter', twitterRoutes);
 
 // Error handling
 app.use(notFound);

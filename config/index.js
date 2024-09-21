@@ -7,6 +7,8 @@ module.exports = {
     ytapiServerUrl: process.env.RAPIAPI_YTAPI_SERVER_URL,
     rapidApiKey: process.env.RAPID_API_KEY,
     instaHost: process.env.RAPIDAPI_INSTAGRAM_HOST,
-    instaServerUrl: process.env.RAPIDAPI_INSTAGRAM_SERVER_URL
+    instaServerUrl: process.env.RAPIDAPI_INSTAGRAM_SERVER_URL,
+    twitterHost: process.env.RAPIDAPI_TWITTER_HOST,
+    twitterServerUrl: process.env.RAPIDAPI_TWITTER_SERVER_URL
 
 };
