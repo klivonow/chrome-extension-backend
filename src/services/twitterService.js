@@ -14,6 +14,76 @@ class TwitterService {
         });
     }
 
+    calculateMetrics(userDetails, tweets) {
+        const totalTweets = tweets.length;
+        let totalLikes = 0;
+        let totalRetweets = 0;
+        let totalReplies = 0;
+        let totalImpressions = 0;
+        let totalQuotes = 0;
+        let tweetsWithUrls = 0;
+        let tweetsWithMedia = 0;
+        let totalHashtags = 0;
+        let totalMentions = 0;
+
+        tweets.forEach(tweet => {
+            if (tweet.content && tweet.content.itemContent && tweet.content.itemContent.tweet_results && tweet.content.itemContent.tweet_results.result) {
+                const tweetData = tweet.content.itemContent.tweet_results.result.legacy;
+                totalLikes += tweetData.favorite_count;
+                totalRetweets += tweetData.retweet_count;
+                totalReplies += tweetData.reply_count;
+                totalQuotes += tweetData.quote_count;
+
+                if (tweet.content.itemContent.tweet_results.result.views && tweet.content.itemContent.tweet_results.result.views.count) {
+                    totalImpressions += parseInt(tweet.content.itemContent.tweet_results.result.views.count);
+                }
+
+                if (tweetData.entities.urls && tweetData.entities.urls.length > 0) {
+                    tweetsWithUrls++;
+                }
+
+                if (tweetData.entities.media && tweetData.entities.media.length > 0) {
+                    tweetsWithMedia++;
+                }
+
+                if (tweetData.entities.hashtags) {
+                    totalHashtags += tweetData.entities.hashtags.length;
+                }
+
+                if (tweetData.entities.user_mentions) {
+                    totalMentions += tweetData.entities.user_mentions.length;
+                }
+            }
+        });
+
+        const engagementRate = totalTweets > 0 ? ((totalLikes + totalRetweets + totalReplies) / (totalTweets * userDetails.legacy.followers_count)) * 100 : 0;
+        const averageImpressions = totalTweets > 0 ? totalImpressions / totalTweets : 0;
+
+        return {
+            totalTweets,
+            totalLikes,
+            totalRetweets,
+            totalReplies,
+            totalQuotes,
+            totalImpressions,
+            engagementRate,
+            averageImpressions,
+            hashtagUsageRate: totalTweets > 0 ? totalHashtags / totalTweets : 0,
+            mentionRate: totalTweets > 0 ? totalMentions / totalTweets : 0,
+            urlShareRate: (tweetsWithUrls / totalTweets) * 100,
+            mediaShareRate: (tweetsWithMedia / totalTweets) * 100,
+            quoteTweetRate: (totalQuotes / totalTweets) * 100,
+            followerToFollowingRatio: userDetails.legacy.followers_count / userDetails.legacy.friends_count,
+            engagementToFollowerRatio: (totalLikes + totalRetweets + totalReplies) / userDetails.legacy.followers_count,
+            viralityScore: totalImpressions > 0 ? ((totalRetweets + totalQuotes) / totalImpressions) * 100 : 0,
+            favoriteToRetweetRatio: totalRetweets > 0 ? totalLikes / totalRetweets : 0,
+            replyRate: (totalReplies / totalTweets) * 100,
+            averageLikesPerTweet: totalTweets > 0 ? totalLikes / totalTweets : 0,
+            averageRetweetsPerTweet: totalTweets > 0 ? totalRetweets / totalTweets : 0,
+            averageRepliesPerTweet: totalTweets > 0 ? totalReplies / totalTweets : 0,
+        };
+    }
+
     async getTwitterUserDetails(username) {
         try {
             const response = await this.twitterClient.get('/user', {
@@ -24,7 +94,6 @@ class TwitterService {
                 logger.warn(`No user data found for username: ${username}`);
                 return { message: `No user found for username ${username}` };
             }
-
             return response.data.result.data.user.result;
         } catch (error) {
             logger.error(`Error in TwitterService.getTwitterUserDetails: ${error.message}`);
@@ -43,7 +112,16 @@ class TwitterService {
                 return { message: `No tweets found for user ID ${userId}` };
             }
 
-            return response.data.result;
+            let tweetList = [];
+            const instructions = response.data.result.timeline.instructions;
+
+            if (instructions.length === 3) {
+                tweetList = instructions[2].entries;
+            } else if (instructions.length > 1) {
+                tweetList = instructions[1].entries;
+            }
+
+            return { tweetList };
         } catch (error) {
             logger.error(`Error in TwitterService.getUserTweets: ${error.message}`);
             throw error;
@@ -59,10 +137,16 @@ class TwitterService {
             }
 
             const tweets = await this.getUserTweets(userDetails.rest_id, tweetCount);
-            // calculate metrics
-            const metrics = calculateMetrics(userDetails, tweets);
+            const metrics = this.calculateMetrics(userDetails, tweets.tweetList);
             return {
-                userDetails,
+                userDetails: {
+                    id: userDetails.rest_id,
+                    name: userDetails.legacy.name,
+                    username: userDetails.legacy.screen_name,
+                    followers_count: userDetails.legacy.followers_count,
+                    following_count: userDetails.legacy.friends_count,
+                    media_count: userDetails.legacy.media_count,
+                },
                 metrics
             };
         } catch (error) {
@@ -70,38 +154,7 @@ class TwitterService {
             throw error;
         }
     }
-    calculateMetrics(username, tweets) {
-        const totalTweets = tweets.length;
-        let totalLikes = 0;
-        let totalRetweets = 0;
-        let totalReplies = 0;
-        let totalImpressions = 0;
 
-        tweets.forEach(tweet => {
-            if (tweet.content && tweet.content.itemContent && tweet.content.itemContent.tweet_results && tweet.content.itemContent.tweet_results.result) {
-                const tweetData = tweet.content.itemContent.tweet_results.result.legacy;
-                totalLikes += tweetData.favorite_count;
-                totalRetweets += tweetData.retweet_count;
-                totalReplies += tweetData.reply_count;
-
-                if (tweet.content.itemContent.tweet_results.result.views && tweet.content.itemContent.tweet_results.result.views.count) {
-                    totalImpressions += parseInt(tweet.content.itemContent.tweet_results.result.views.count);
-                }
-            }
-        });
-        const engagementRate = totalTweets > 0 ? ((totalLikes + totalRetweets + totalReplies) / (totalTweets * userDetails.legacy.followers_count)) * 100 : 0;
-        const averageImpressions = totalTweets > 0 ? totalImpressions / totalTweets : 0;
-
-        return {
-            totalTweets,
-            totalLikes,
-            totalRetweets,
-            totalReplies,
-            totalImpressions,
-            engagementRate,
-            averageImpressions
-        }
-    }
 }
 
 const twitterService = new TwitterService();
