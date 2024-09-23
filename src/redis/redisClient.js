@@ -11,7 +11,7 @@ class RedisClient {
         this.client = null;
         this.port = port;
         this.host = host;
-        this.options = options
+        // this.options = options
     }
     async connect() {
         try {
