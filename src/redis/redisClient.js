@@ -42,16 +42,13 @@ class RedisClient {
             throw error;
         }
     }
-    async set(key, value, expirationInSeconds = null) {
+    async set(key, value) {
         try {
-            // const serlizedValue = JSON.stringify(value);
-            if (expirationInSeconds) {
-                await this.client.setEx(key, value, expirationInSeconds);
 
-            } else {
-                await this.client.set(key, value);
 
-            }
+            await this.client.hSet(key, value);
+
+
             logger.info(`Successfully set key: ${key}`);
         } catch (error) {
             logger.error(`Error setting data in Redis for key: ${key}`, error);
@@ -60,7 +57,7 @@ class RedisClient {
     }
     async get(key) {
         try {
-            const value = await this.client.get(key);
+            const value = await this.client.hGetAll(key);
             return value ? value : null;
 
         } catch (error) {
