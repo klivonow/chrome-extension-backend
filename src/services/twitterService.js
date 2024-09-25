@@ -2,6 +2,7 @@
 const axios = require('axios');
 const config = require('../../config');
 const logger = require('../utils/logger');
+const redisClient = require('../redis/redisClient');
 
 class TwitterService {
     constructor() {
@@ -12,6 +13,7 @@ class TwitterService {
                 'x-rapidapi-host': config.twitterHost
             }
         });
+        this.CACHE_TTL = 3600;
     }
 
     calculateMetrics(userDetails, tweets) {
@@ -85,7 +87,15 @@ class TwitterService {
     }
 
     async getTwitterUserDetails(username) {
+        const cacheKey = `twitter:user:${username}`;
         try {
+            // fetch the redis first
+            const cachedData = await redisClient.get(cacheKey);
+            if (cachedData) {
+                logger.info(`Cache hit for user: ${username}`);
+                return JSON.parse(cachedData);
+            }
+            // if not in cache, fetch from API
             const response = await this.twitterClient.get('/user', {
                 params: { username: username }
             });
@@ -94,7 +104,11 @@ class TwitterService {
                 logger.warn(`No user data found for username: ${username}`);
                 return { message: `No user found for username ${username}` };
             }
-            return response.data.result.data.user.result;
+            const userData = response.data.result.data.user.result;
+            // cache the result
+            console.log(userData);
+            await redisClient.set(cacheKey, userData.toString(), this.CACHE_TTL);
+            return userData;
         } catch (error) {
             logger.error(`Error in TwitterService.getTwitterUserDetails: ${error.message}`);
             throw error;
@@ -102,7 +116,15 @@ class TwitterService {
     }
 
     async getUserTweets(userId, count = 20) {
+        const cacheKey = `twitter:tweets:${userId}:${count}`;
         try {
+            // try to get the data from the cache
+            const cachedData = await redisClient.get(cacheKey);
+            if (cachedData) {
+                logger.info(`Cache hit for tweets of user: ${userId}`);
+                return JSON.parse(cachedData);
+            }
+            // if not fetch from cache
             const response = await this.twitterClient.get('/user-tweets', {
                 params: { user: userId, count: count }
             });
@@ -121,7 +143,11 @@ class TwitterService {
                 tweetList = instructions[1].entries;
             }
 
-            return { tweetList };
+            const result = { tweetList };
+            console.log(result);
+            // store in the cache
+            await redisClient.set(cacheKey, (result.tweetList[0].toString()), this.CACHE_TTL);
+            return result;
         } catch (error) {
             logger.error(`Error in TwitterService.getUserTweets: ${error.message}`);
             throw error;
