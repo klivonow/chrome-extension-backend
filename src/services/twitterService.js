@@ -89,11 +89,11 @@ class TwitterService {
     async getTwitterUserDetails(username) {
         const cacheKey = `twitter:user:${username}`;
         try {
-            // fetch the redis first
+            // fetch from redis first
             // const cachedData = await redisClient.get(cacheKey);
-            // if (cachedData) {
+            // if (cachedData && Object.keys(cachedData).length > 0) {
             //     logger.info(`Cache hit for user: ${username}`);
-            //     return JSON.stringify(cachedData);
+            //     return cachedData;
             // }
             // if not in cache, fetch from API
             const response = await this.twitterClient.get('/user', {
@@ -106,8 +106,7 @@ class TwitterService {
             }
             const userData = response.data.result.data.user.result;
             // cache the result
-            console.log(userData);
-            // await redisClient.set(cacheKey, JSON.stringify(userData.userDetails));
+            // await redisClient.set(cacheKey, userData);
             return userData;
         } catch (error) {
             logger.error(`Error in TwitterService.getTwitterUserDetails: ${error.message}`);
@@ -116,13 +115,13 @@ class TwitterService {
     }
 
     async getUserTweets(userId, count = 20) {
-        const cacheKey = `twitter:tweets:${userId}:${count}`;
+        // const cacheKey = `twitter:tweets:${userId}:${count}`;
         try {
             // try to get the data from the cache
             // const cachedData = await redisClient.get(cacheKey);
-            // if (cachedData) {
+            // if (cachedData && Object.keys(cachedData).length > 0) {
             //     logger.info(`Cache hit for tweets of user: ${userId}`);
-            //     return JSON.stringify(cachedData);
+            //     return cachedData;
             // }
             // if not fetch from cache
             const response = await this.twitterClient.get('/user-tweets', {
@@ -143,11 +142,10 @@ class TwitterService {
                 tweetList = instructions[1].entries;
             }
 
-            const result = { tweetList };
-            console.log(result);
+            // const result = { tweetList: JSON.stringify(tweetList) };
             // store in the cache
-            // await redisClient.set(cacheKey, JSON.stringify(result));
-            return result;
+            // await redisClient.set(cacheKey, result);
+            return tweetList;
         } catch (error) {
             logger.error(`Error in TwitterService.getUserTweets: ${error.message}`);
             throw error;
@@ -163,7 +161,7 @@ class TwitterService {
             }
 
             const tweets = await this.getUserTweets(userDetails.rest_id, tweetCount);
-            const metrics = this.calculateMetrics(userDetails, tweets.tweetList);
+            const metrics = this.calculateMetrics(userDetails, tweets);
             return {
                 userDetails: {
                     id: userDetails.rest_id,

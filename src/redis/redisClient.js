@@ -44,26 +44,55 @@ class RedisClient {
     }
     async set(key, value) {
         try {
-
-
-            await this.client.hSet(key, value);
-
-
+            const hashData = this.flattenObject(value);
+            await this.client.hSet(key, hashData);
             logger.info(`Successfully set key: ${key}`);
         } catch (error) {
             logger.error(`Error setting data in Redis for key: ${key}`, error);
             throw error;
         }
     }
+
     async get(key) {
         try {
             const value = await this.client.hGetAll(key);
-            return value ? value : null;
-
+            return this.unflattenObject(value);
         } catch (error) {
             logger.error(`Error getting the data from Redis for key: ${key}`, error);
             throw error;
         }
+    }
+
+    flattenObject(obj, prefix = '') {
+        return Object.keys(obj).reduce((acc, k) => {
+            const pre = prefix.length ? prefix + '.' : '';
+            if (typeof obj[k] === 'object' && obj[k] !== null && !Array.isArray(obj[k])) {
+                Object.assign(acc, this.flattenObject(obj[k], pre + k));
+            } else {
+                acc[pre + k] = JSON.stringify(obj[k]);
+            }
+            return acc;
+        }, {});
+    }
+
+    unflattenObject(obj) {
+        const result = {};
+        for (const key in obj) {
+            const keys = key.split('.');
+            keys.reduce((acc, k, i) => {
+                if (i === keys.length - 1) {
+                    try {
+                        acc[k] = JSON.parse(obj[key]);
+                    } catch {
+                        acc[k] = obj[key];
+                    }
+                } else {
+                    acc[k] = acc[k] || {};
+                }
+                return acc[k];
+            }, result);
+        }
+        return result;
     }
 
     async delete(key) {
