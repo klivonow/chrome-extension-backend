@@ -14,7 +14,7 @@ class InstagramService {
 
     }
     // insta  user  insights
-    async getComprehensiveInsights(username, maxPosts = 30) {
+    async getComprehensiveInsights(username, maxPosts = 20) {
         try {
             const userInfo = await this.getUserInfo(username);
             const postsAndReels = await this.getUserPostsAndReelsDetails(username, maxPosts);

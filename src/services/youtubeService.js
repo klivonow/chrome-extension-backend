@@ -12,7 +12,7 @@ class YouTubeService {
                 'x-rapidapi-host': config.ytapiHost
             }
         });
-        this.MAX_VIDEOS = 100; // Maximum number of videos to fetch for small channels
+        this.MAX_VIDEOS = 10; // Maximum number of videos to fetch for small channels
     }
 
     async getChannelDetails(ytUrl) {

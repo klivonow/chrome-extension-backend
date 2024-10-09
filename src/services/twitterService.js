@@ -114,18 +114,12 @@ class TwitterService {
         }
     }
 
-    async getUserTweets(userId, count = 20) {
-        // const cacheKey = `twitter:tweets:${userId}:${count}`;
+    async getUserTweets(userId) {
         try {
-            // try to get the data from the cache
-            // const cachedData = await redisClient.get(cacheKey);
-            // if (cachedData && Object.keys(cachedData).length > 0) {
-            //     logger.info(`Cache hit for tweets of user: ${userId}`);
-            //     return cachedData;
-            // }
+
             // if not fetch from cache
             const response = await this.twitterClient.get('/user-tweets', {
-                params: { user: userId, count: count }
+                params: { user: userId, count: 20 }
             });
 
             if (!response.data || !response.data.result) {
@@ -152,7 +146,7 @@ class TwitterService {
         }
     }
 
-    async getUserDetailsWithTweets(username, tweetCount = 20) {
+    async getUserDetailsWithTweets(username) {
         try {
             const userDetails = await this.getTwitterUserDetails(username);
 
@@ -160,7 +154,7 @@ class TwitterService {
                 return { message: `Unable to fetch details for username ${username}` };
             }
 
-            const tweets = await this.getUserTweets(userDetails.rest_id, tweetCount);
+            const tweets = await this.getUserTweets(userDetails.rest_id);
             const metrics = this.calculateMetrics(userDetails, tweets);
             return {
                 userDetails: {
